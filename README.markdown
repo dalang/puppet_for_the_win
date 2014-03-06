@@ -74,9 +74,15 @@ Builder](http://links.puppetlabs.com/puppetwinbuilder) archive unpacked into
 `C:/puppetwinbuilder/` the following are all that is required to build the MSI
 packages.
 
+    REM Not found "build.bat"? make a copy of "build_example.bat" yourself.
     C:\>cd puppetwinbuilder
     C:\puppetwinbuilder\> build
     ...
+
+ **`build` will use 'config.yaml' in 'src/puppet_for_the_win' as default configuration, you can use the following command to choose your configuration file, we use 'foss-stable.yaml' in this case**   
+
+    C:\cd puppet_for_the_win\src\puppet_for_the_win
+    C:\puppetwinbuilder\src\puppet_for_the_win> rake windows:build config=foss-stable.yaml
 
 (REVISIT - This is the thing we're working to.  Make sure this is accurate once
 implemented)
