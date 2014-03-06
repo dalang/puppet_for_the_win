@@ -84,6 +84,10 @@ packages.
     C:\cd puppet_for_the_win\src\puppet_for_the_win
     C:\puppetwinbuilder\src\puppet_for_the_win> rake windows:build config=foss-stable.yaml
 
+Use [build.bat](build.bat), you can specify certern configuration file as below
+
+    C:\puppetwinbuilder\> build config=foss-stable.yaml
+
 (REVISIT - This is the thing we're working to.  Make sure this is accurate once
 implemented)
 
