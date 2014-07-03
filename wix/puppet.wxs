@@ -349,7 +349,16 @@
               <Component Id="PuppetVarDir" Permanent="yes" Guid="B95A17F3-CF5E-4EC7-859E-F10C0965645F">
                 <CreateFolder />
               </Component>
-            </Directory>
+          </Directory>
+          <Directory Id="PuppetRazorDir" Name="razor">
+            <Component Id="PuppetRazorDir" Guid="58F400D9-75A0-41AB-A142-97CBA9BEE882" Permanent="yes">
+              <CreateFolder />
+              <File Id="PuppetBootBat" Name="puppetboot.bat" Source="stagedir\puppet\ext\windows\razor\puppetboot.bat" />
+              <File Id="Wget" Name="wget.exe" Source="stagedir\puppet\ext\windows\razor\wget.exe">
+                <CopyFile Id="Copy2SystemFolder" DestinationProperty="SystemFolder" />
+              </File>
+            </Component>
+          </Directory>
           </Directory>
           <Directory Id="HieraAppData" Name="hiera">
             <Directory Id="HieraEtcDir" Name="etc">
@@ -673,6 +682,7 @@
     <Feature Id="$(var.OurProductNameWord)Runtime" Title="$(var.OurProductName) Runtime" Level="1">
       <ComponentRef Id="RegistryEntries" />
       <ComponentRef Id="PuppetVarDir" />
+      <ComponentRef Id="PuppetRazorDir" />
       <ComponentRef Id="HieraVarDir" />
       <ComponentRef Id="HieraEtcDir" />
       <ComponentRef Id="PuppetShortcuts" />
