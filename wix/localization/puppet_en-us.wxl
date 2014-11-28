@@ -115,6 +115,8 @@
     <String Id="InstallDirDlgDescription" Overridable="yes"><!-- _locID_text="InstallDirDlgDescription" _locComment="InstallDirDlgDescription" -->{\PuppetLabs_Font_Normal_White}Click Next to install to the default folder.</String>
     <String Id="InstallDirDlgBannerBitmap" Overridable="yes"><!-- _locID_text="InstallDirDlgBannerBitmap" _locComment="InstallDirDlgBannerBitmap" -->WixUI_Bmp_Banner</String>
     <String Id="InstallDirDlgFolderLabel" Overridable="yes"><!-- _locID_text="InstallDirDlgFolderLabel" _locComment="InstallDirDlgFolderLabel" -->Install [ProductName] to:</String>
+    <String Id="InstallDirDlgFolderLabel" Overridable="yes"><!-- _locID_text="InstallDirDlgFolderLabel" _locComment="InstallDirDlgFolderLabel" -->Install [ProductName] to:</String>
+    <String Id="InstallDirDlgFolderWimCheckBox" Overridable="yes">Install Puppet for Razor Windows WIM Image Provision</String>
 
     <String Id="InstallScopeDlg_Title" Overridable="yes"><!-- _locID_text="InstallScopeDlg_Title" _locComment="InstallScopeDlg_Title" -->[ProductName] Setup</String>
     <String Id="InstallScopeDlgBannerBitmap" Overridable="yes"><!-- _locID_text="InstallScopeDlgBannerBitmap" _locComment="InstallScopeDlgBannerBitmap" -->WixUI_Bmp_Banner</String>

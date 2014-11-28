@@ -1,0 +1,17 @@
+---
+:repos:
+  puppet:
+    :ref: origin/cloud_manager
+    :repo: git://github.com/dalang/puppet.git
+  facter:
+    :ref: origin/stable
+    :repo: git://github.com/puppetlabs/facter.git
+  hiera:
+    :ref: origin/stable
+    :repo: git://github.com/puppetlabs/hiera.git
+  sys:
+    :ref: origin/1.9.3
+    :repo: git://github.com/dalang/puppet-win32-ruby.git
+  mcollective_plugins:
+    :ref: origin/master
+    :repo: git://github.com/puppetlabs/mcollective-plugins.git

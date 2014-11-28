@@ -1,713 +1,490 @@
-<?xml version='1.0' encoding='windows-1252'?>
-<Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'
-  xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
-  <!--
+<?xml version="1.0" encoding="utf-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
+    <!--
   This is how to include wxi files.  We expect this file to define variables
   like the version numbers and the upgrade UUID.
   -->
-  <?include $(sys.SOURCEFILEDIR)include/puppet.wxi ?>
-
-  <!--
+    <?include $(sys.SOURCEFILEDIR)include/puppet.wxi ?>
+    <!--
   The Product Id should not be changed, the unique identifier enables
   un-install of the MSI package easily.  More information about supporting
   major upgrades is available at:
   http://wix.sourceforge.net/manual-wix3/major_upgrade.htm
   Name is made of localized product name and version number.
   -->
-  <Product Id="$(var.ProductCode)" UpgradeCode="$(var.UpgradeCode)"
-    Name="$(var.OurProductName)"
-    Language='1033'
-    Codepage='1252'
-    Version="$(var.ProductVersionNumber)"
-    Manufacturer="$(var.OurCompanyName)">
-
-    <Package
-      InstallerVersion='300'
-      InstallScope="perMachine"
-      Description="$(var.OurProductName) Installer"
-      Comments="http://www.puppetlabs.com/"
-      Compressed="yes"
-      />
-
-    <util:Group Id="AdminGroup" Name="Administrators"/>
-
-    <!-- We allow "downgrades" to support Puppet to Puppet Enterprise
+    <Product Id="$(var.ProductCode)" UpgradeCode="$(var.UpgradeCode)" Name="$(var.OurProductName)" Language="1033" Codepage="1252" Version="$(var.ProductVersionNumber)" Manufacturer="$(var.OurCompanyName)">
+        <Package InstallerVersion="300" InstallScope="perMachine" Description="$(var.OurProductName) Installer" Comments="http://www.puppetlabs.com/" Compressed="yes" />
+        <util:Group Id="AdminGroup" Name="Administrators" />
+        <!-- We allow "downgrades" to support Puppet to Puppet Enterprise
          "upgrades" since these versions will not compare well.  e.g. we need
          to upgrade from Puppet 2.7.10 to Puppet Enterprise 2.5.0 -->
-    <MajorUpgrade AllowDowngrades="yes" />
-
-    <!-- Note, this UI element must come _after_ the Package element -->
-    <UI>
-      <!-- (#12473) (#12474) Installation Directory Dialog -->
-      <UIRef Id="WixUI_PuppetInstallDir"/>
-      <!-- To use WixUI_InstallDir, you must set a property named
+        <MajorUpgrade AllowDowngrades="yes" />
+        <!-- Note, this UI element must come _after_ the Package element -->
+        <UI>
+            <!-- (#12473) (#12474) Installation Directory Dialog -->
+            <UIRef Id="WixUI_PuppetInstallDir" />
+            <!-- To use WixUI_InstallDir, you must set a property named
          WIXUI_INSTALLDIR with a value of the ID of the directory you want the
          user to be able to specify the location of. -->
-      <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
-      <!-- This text is placed as a literal string in the GUI -->
-      <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Manage your first resources on this node, explore the Puppet community and get support using the shortcuts in the Documentation folder of your Start Menu." />
-    </UI>
-
-    <Media Id="1"
-      Cabinet="$(var.OurProductNameWord).cab"
-      EmbedCab="yes"
-      CompressionLevel="high"
-      />
-
-    <!--
+            <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR" />
+            <!-- This text is placed as a literal string in the GUI -->
+            <Property Id="WIXUI_EXITDIALOGOPTIONALTEXT" Value="Manage your first resources on this node, explore the Puppet community and get support using the shortcuts in the Documentation folder of your Start Menu." />
+        </UI>
+        <Media Id="1" Cabinet="$(var.OurProductNameWord).cab" EmbedCab="yes" CompressionLevel="high" />
+        <!--
       TARGETDIR is Usually C:/  This will also be the location the install package will be copied to
       For more information: http://msdn.microsoft.com/en-us/library/aa372064.aspx
 
       INSTALLDIR is the root of our application, which is C:/Program Files/Puppet Labs for us.
     -->
-    <Directory Id='TARGETDIR' Name='SourceDir'>
-      <!-- The start menu shortcuts -->
-      <Directory Id='ProgramMenuFolder'>
-        <Directory Id='PuppetShortcutDir' Name="$(var.OurProductName)">
-          <Component Id="PuppetShortcuts" Guid="0B69C3FF-8967-4F8A-AC71-0EAE34E91ACC">
-            <Shortcut Id="PuppetShortcut"
-              Name="Run Puppet Agent"
-              Description="Run Puppet in an interactive command window"
-              Target="[INSTALLDIR]bin\run_puppet_interactive.bat"
-              Icon="PuppetShortcutIcon"
-              WorkingDirectory="bin">
-              <Icon Id="PuppetShortcutIcon" SourceFile="conf\windows\stage\misc\puppetlabs.ico"/>
-            </Shortcut>
-            <Shortcut Id="FacterShortcut"
-              Name="Run Facter"
-              Description="Run Facter in an interactive command window"
-              Target="[INSTALLDIR]bin\run_facter_interactive.bat"
-              Icon="FacterShortcutIcon"
-              WorkingDirectory="bin">
-              <Icon Id="FacterShortcutIcon" SourceFile="conf\windows\stage\misc\puppetlabs.ico"/>
-            </Shortcut>
-            <Shortcut Id="PuppetShellShortcut"
-              Name="Start Command Prompt with Puppet"
-              Description="Start a Command Prompt with Puppet already in the PATH and RUBYLIB load path."
-              Target="[%ComSpec]"
-              Arguments='/E:ON /K "[INSTALLDIR]bin\puppet_shell.bat"'
-              Icon="PuppetShellShortcutIcon"
-              WorkingDirectory="bin">
-              <Icon Id="PuppetShellShortcutIcon" SourceFile="conf\windows\stage\misc\puppetlabs.ico"/>
-            </Shortcut>
-            <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall"/>
-            <!-- This registry entry is required to be a keypath for this component -->
-            <RegistryValue Root="HKCU" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurProductName)"
-              Name="installed" Value="1" Type="integer" KeyPath="yes" />
-          </Component>
-          <Directory Id='PuppetShortcutDocumentationDir' Name="Documentation">
-            <Component Id="PuppetDocumentationShortcuts" Guid="651178BC-76D8-4574-B97B-B132064EE2FB">
-            <CreateFolder />
-              <IniFile Id="PuppetSupportURL" Name="Get $(var.OurProductName) Support.url"
-                Action="addLine"
-                Section="InternetShortcut"
-                Key="URL" Value="$(var.HelpLink)"
-                Directory="PuppetShortcutDocumentationDir" />
-              <IniFile Id="PuppetCommunityURL" Name="Explore the Puppet Community.url"
-                Action="addLine"
-                Section="InternetShortcut"
-                Key="URL" Value="$(var.CommunityLink)"
-                Directory="PuppetShortcutDocumentationDir" />
-              <IniFile Id="PuppetNextStepURL" Name="$(var.OurProductName) First Steps.url"
-                Action="addLine"
-                Section="InternetShortcut"
-                Key="URL" Value="$(var.NextStepLink)"
-                Directory="PuppetShortcutDocumentationDir" />
-              <IniFile Id="PuppetManualURL" Name="$(var.OurProductName) Manual.url"
-                Action="addLine"
-                Section="InternetShortcut"
-                Key="URL" Value="$(var.ManualLink)"
-                Directory="PuppetShortcutDocumentationDir" />
-              <IniFile Id="PuppetForgeURL" Name="Puppet Forge.url"
-                Action="addLine"
-                Section="InternetShortcut"
-                Key="URL" Value="$(var.ForgeLink)"
-                Directory="PuppetShortcutDocumentationDir" />
-              <RemoveFolder Id="PuppetShortcutDocumentationDir" On="uninstall"/>
-              <RegistryValue Root="HKCU" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurProductName)\Documentation"
-                Name="installed" Value="1" Type="integer" KeyPath="yes" />
-            </Component>
-          </Directory>
-        </Directory>
-      </Directory>
-      <!-- The application itself -->
-      <Directory Id='ProgramFilesFolder' >
-        <Directory Id='PuppetLabs' Name="$(var.OurCompanyName)">
-          <Directory Id='INSTALLDIR' Name="$(var.OurProductName)">
-            <Directory Id='sys' Name='sys'>
+        <Directory Id="TARGETDIR" Name="SourceDir">
+            <!-- The start menu shortcuts -->
+            <Directory Id="ProgramMenuFolder">
+                <Directory Id="PuppetShortcutDir" Name="$(var.OurProductName)">
+                    <Component Id="PuppetShortcuts" Guid="0B69C3FF-8967-4F8A-AC71-0EAE34E91ACC">
+                        <Shortcut Id="PuppetShortcut" Name="Run Puppet Agent" Description="Run Puppet in an interactive command window" Target="[INSTALLDIR]bin\run_puppet_interactive.bat" Icon="PuppetShortcutIcon" WorkingDirectory="bin">
+                            <Icon Id="PuppetShortcutIcon" SourceFile="conf\windows\stage\misc\puppetlabs.ico" />
+                        </Shortcut>
+                        <Shortcut Id="FacterShortcut" Name="Run Facter" Description="Run Facter in an interactive command window" Target="[INSTALLDIR]bin\run_facter_interactive.bat" Icon="FacterShortcutIcon" WorkingDirectory="bin">
+                            <Icon Id="FacterShortcutIcon" SourceFile="conf\windows\stage\misc\puppetlabs.ico" />
+                        </Shortcut>
+                        <Shortcut Id="PuppetShellShortcut" Name="Start Command Prompt with Puppet" Description="Start a Command Prompt with Puppet already in the PATH and RUBYLIB load path." Target="[%ComSpec]" Arguments="/E:ON /K &quot;[INSTALLDIR]bin\puppet_shell.bat&quot;" Icon="PuppetShellShortcutIcon" WorkingDirectory="bin">
+                            <Icon Id="PuppetShellShortcutIcon" SourceFile="conf\windows\stage\misc\puppetlabs.ico" />
+                        </Shortcut>
+                        <RemoveFolder Id="ApplicationProgramsFolder" On="uninstall" />
+                        <!-- This registry entry is required to be a keypath for this component -->
+                        <RegistryValue Root="HKCU" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurProductName)" Name="installed" Value="1" Type="integer" KeyPath="yes" />
+                    </Component>
+                    <Directory Id="PuppetShortcutDocumentationDir" Name="Documentation">
+                        <Component Id="PuppetDocumentationShortcuts" Guid="651178BC-76D8-4574-B97B-B132064EE2FB">
+                            <CreateFolder />
+                            <IniFile Id="PuppetSupportURL" Name="Get $(var.OurProductName) Support.url" Action="addLine" Section="InternetShortcut" Key="URL" Value="$(var.HelpLink)" Directory="PuppetShortcutDocumentationDir" />
+                            <IniFile Id="PuppetCommunityURL" Name="Explore the Puppet Community.url" Action="addLine" Section="InternetShortcut" Key="URL" Value="$(var.CommunityLink)" Directory="PuppetShortcutDocumentationDir" />
+                            <IniFile Id="PuppetNextStepURL" Name="$(var.OurProductName) First Steps.url" Action="addLine" Section="InternetShortcut" Key="URL" Value="$(var.NextStepLink)" Directory="PuppetShortcutDocumentationDir" />
+                            <IniFile Id="PuppetManualURL" Name="$(var.OurProductName) Manual.url" Action="addLine" Section="InternetShortcut" Key="URL" Value="$(var.ManualLink)" Directory="PuppetShortcutDocumentationDir" />
+                            <IniFile Id="PuppetForgeURL" Name="Puppet Forge.url" Action="addLine" Section="InternetShortcut" Key="URL" Value="$(var.ForgeLink)" Directory="PuppetShortcutDocumentationDir" />
+                            <RemoveFolder Id="PuppetShortcutDocumentationDir" On="uninstall" />
+                            <RegistryValue Root="HKCU" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurProductName)\Documentation" Name="installed" Value="1" Type="integer" KeyPath="yes" />
+                        </Component>
+                    </Directory>
+                </Directory>
             </Directory>
-            <Directory Id='bin' Name='bin'>
-              <Component Id="PuppetInstallDirBinToPath" Guid="F46FA9A8-43A2-4379-8933-EAAE2D0E5D72">
-                <CreateFolder />
-                <Environment Id="PuppetBinPath" Name="PATH" Value="[INSTALLDIR]bin" Permanent="no" Part="last" Action="set" System="yes" />
-              </Component>
-            </Directory>
-            <Directory Id='service' Name='service'>
-              <!--Seriously?... http://stackoverflow.com/questions/9419411/wix-setting-service-startup-type-using-a-property-property-not-recognized -->
-              <!-- Yep, Seriously - http://sourceforge.net/mailarchive/forum.php?thread_name=CANJN1a6gDE2tUUnP4SE05m8Ojh2q0Y8LrWOxbrF89YyJJCHn1A%40mail.gmail.com&forum_name=wix-users -->
-              <Component Id='PuppetServiceAutomatic' Guid="639ECD7F-6186-43D5-9E1A-FC0278DBEE15">
-                <Condition>
-                  <![CDATA[ (PUPPET_AGENT_STARTUP_MODE ~<> "manual") AND (PUPPET_AGENT_STARTUP_MODE ~<> "disabled") ]]>
-                </Condition>
-                <File Id="PuppetDaemonBat" KeyPath="yes" Source="stagedir\puppet\ext\windows\service\daemon.bat" />
-                <File Id="PuppetDaemon" KeyPath="no" Source="stagedir\puppet\ext\windows\service\daemon.rb" />
-
-                <ServiceInstall Id="ServiceInstaller"
-                  Account="[PUPPET_AGENT_ACCOUNT_DOMAIN]\[PUPPET_AGENT_ACCOUNT_USER]"
-                  Password="[PUPPET_AGENT_ACCOUNT_PASSWORD]"
-                  Description="Periodically fetches and applies configurations from a Puppet master server."
-                  DisplayName="Puppet Agent"
-                  Interactive="no"
-                  Name="$(var.PuppetServiceName)"
-                  Start="auto"
-                  Type="ownProcess"
-                  ErrorControl="normal"
-                  Vital="yes"
-                  />
-                <ServiceControl Id="ServiceControlOptions" Start="install" Stop="both" Remove="uninstall" Name="$(var.PuppetServiceName)" Wait="yes" />
-              </Component>
-              <Component Id='PuppetServiceManual' Guid="752A5A25-9619-4EBA-AA8B-12D8C8688236">
-                <Condition>
-                  <![CDATA[PUPPET_AGENT_STARTUP_MODE ~= "manual"]]>
-                </Condition>
-                <File Id="PuppetDaemonBatManual" KeyPath="yes" Source="stagedir\puppet\ext\windows\service\daemon.bat" />
-                <File Id="PuppetDaemonManual" KeyPath="no" Source="stagedir\puppet\ext\windows\service\daemon.rb" />
-
-                <ServiceInstall Id="ServiceInstallerManual"
-                  Account="[PUPPET_AGENT_ACCOUNT_DOMAIN]\[PUPPET_AGENT_ACCOUNT_USER]"
-                  Password="[PUPPET_AGENT_ACCOUNT_PASSWORD]"
-                  Description="Periodically fetches and applies configurations from a Puppet master server."
-                  DisplayName="Puppet Agent"
-                  Interactive="no"
-                  Name="$(var.PuppetServiceName)"
-                  Start="demand"
-                  Type="ownProcess"
-                  ErrorControl="normal"
-                  Vital="yes"
-                  />
-                <ServiceControl Id="ServiceControlOptionsManual" Stop="both" Remove="uninstall" Name="$(var.PuppetServiceName)" Wait="yes" />
-              </Component>
-              <Component Id='PuppetServiceDisabled' Guid="4D3A8CAF-C675-46AC-B3AD-75F00581D0DB">
-                <Condition>
-                  <![CDATA[PUPPET_AGENT_STARTUP_MODE ~= "disabled"]]>
-                </Condition>
-                <File Id="PuppetDaemonBatDisabled" KeyPath="yes" Source="stagedir\puppet\ext\windows\service\daemon.bat" />
-                <File Id="PuppetDaemonDisabled" KeyPath="no" Source="stagedir\puppet\ext\windows\service\daemon.rb" />
-
-                <ServiceInstall Id="ServiceInstallerDisabled"
-                  Account="[PUPPET_AGENT_ACCOUNT_DOMAIN]\[PUPPET_AGENT_ACCOUNT_USER]"
-                  Password="[PUPPET_AGENT_ACCOUNT_PASSWORD]"
-                  Description="Periodically fetches and applies configurations from a Puppet master server."
-                  DisplayName="Puppet Agent"
-                  Interactive="no"
-                  Name="$(var.PuppetServiceName)"
-                  Start="disabled"
-                  Type="ownProcess"
-                  ErrorControl="normal"
-                  Vital="yes"
-                  />
-                <ServiceControl Id="ServiceControlOptionsDisabled" Stop="both" Remove="uninstall" Name="$(var.PuppetServiceName)" Wait="yes" />
-              </Component>
-              <!-- mcollective is only installed for Puppet Enterprise -->
-              <?if $(var.PackageBrand) = enterprise ?>
-              <Component Id='MCOService' Guid="7601FCEA-90B3-CC69-6A69-4087FBC7292D">
-                <File Id="MCODaemonBat" KeyPath="yes" Source="stagedir\mcollective\ext\windows\daemon.bat" Name="mco_daemon.bat" />
-                <!-- This service is installed with start set to demand because
+            <!-- The application itself -->
+            <Directory Id="ProgramFilesFolder">
+                <Directory Id="PuppetLabs" Name="$(var.OurCompanyName)">
+                    <Directory Id="INSTALLDIR" Name="$(var.OurProductName)">
+                        <Directory Id="sys" Name="sys">
+                        </Directory>
+                        <Directory Id="bin" Name="bin">
+                            <Component Id="PuppetInstallDirBinToPath" Guid="F46FA9A8-43A2-4379-8933-EAAE2D0E5D72">
+                                <CreateFolder />
+                                <Environment Id="PuppetBinPath" Name="PATH" Value="[INSTALLDIR]bin" Permanent="no" Part="last" Action="set" System="yes" />
+                            </Component>
+                        </Directory>
+                        <Directory Id="service" Name="service">
+                            <!--Seriously?... http://stackoverflow.com/questions/9419411/wix-setting-service-startup-type-using-a-property-property-not-recognized -->
+                            <!-- Yep, Seriously - http://sourceforge.net/mailarchive/forum.php?thread_name=CANJN1a6gDE2tUUnP4SE05m8Ojh2q0Y8LrWOxbrF89YyJJCHn1A%40mail.gmail.com&forum_name=wix-users -->
+                            <Component Id="PuppetServiceAutomatic" Guid="639ECD7F-6186-43D5-9E1A-FC0278DBEE15">
+                                <Condition><![CDATA[ (PUPPET_AGENT_STARTUP_MODE ~<> "manual") AND (PUPPET_AGENT_STARTUP_MODE ~<> "disabled") ]]></Condition>
+                                <File Id="PuppetDaemonBat" KeyPath="yes" Source="stagedir\puppet\ext\windows\service\daemon.bat" />
+                                <File Id="PuppetDaemon" KeyPath="no" Source="stagedir\puppet\ext\windows\service\daemon.rb" />
+                                <ServiceInstall Id="ServiceInstaller" Account="[PUPPET_AGENT_ACCOUNT_DOMAIN]\[PUPPET_AGENT_ACCOUNT_USER]" Password="[PUPPET_AGENT_ACCOUNT_PASSWORD]" Description="Periodically fetches and applies configurations from a Puppet master server." DisplayName="Puppet Agent" Interactive="no" Name="$(var.PuppetServiceName)" Start="auto" Type="ownProcess" ErrorControl="normal" Vital="yes" />
+                                <ServiceControl Id="ServiceControlOptions" Start="install" Stop="both" Remove="uninstall" Name="$(var.PuppetServiceName)" Wait="yes" />
+                            </Component>
+                            <Component Id="PuppetServiceManual" Guid="752A5A25-9619-4EBA-AA8B-12D8C8688236">
+                                <Condition><![CDATA[PUPPET_AGENT_STARTUP_MODE ~= "manual"]]></Condition>
+                                <File Id="PuppetDaemonBatManual" KeyPath="yes" Source="stagedir\puppet\ext\windows\service\daemon.bat" />
+                                <File Id="PuppetDaemonManual" KeyPath="no" Source="stagedir\puppet\ext\windows\service\daemon.rb" />
+                                <ServiceInstall Id="ServiceInstallerManual" Account="[PUPPET_AGENT_ACCOUNT_DOMAIN]\[PUPPET_AGENT_ACCOUNT_USER]" Password="[PUPPET_AGENT_ACCOUNT_PASSWORD]" Description="Periodically fetches and applies configurations from a Puppet master server." DisplayName="Puppet Agent" Interactive="no" Name="$(var.PuppetServiceName)" Start="demand" Type="ownProcess" ErrorControl="normal" Vital="yes" />
+                                <ServiceControl Id="ServiceControlOptionsManual" Stop="both" Remove="uninstall" Name="$(var.PuppetServiceName)" Wait="yes" />
+                            </Component>
+                            <Component Id="PuppetServiceDisabled" Guid="4D3A8CAF-C675-46AC-B3AD-75F00581D0DB">
+                                <Condition><![CDATA[PUPPET_AGENT_STARTUP_MODE ~= "disabled"]]></Condition>
+                                <File Id="PuppetDaemonBatDisabled" KeyPath="yes" Source="stagedir\puppet\ext\windows\service\daemon.bat" />
+                                <File Id="PuppetDaemonDisabled" KeyPath="no" Source="stagedir\puppet\ext\windows\service\daemon.rb" />
+                                <ServiceInstall Id="ServiceInstallerDisabled" Account="[PUPPET_AGENT_ACCOUNT_DOMAIN]\[PUPPET_AGENT_ACCOUNT_USER]" Password="[PUPPET_AGENT_ACCOUNT_PASSWORD]" Description="Periodically fetches and applies configurations from a Puppet master server." DisplayName="Puppet Agent" Interactive="no" Name="$(var.PuppetServiceName)" Start="disabled" Type="ownProcess" ErrorControl="normal" Vital="yes" />
+                                <ServiceControl Id="ServiceControlOptionsDisabled" Stop="both" Remove="uninstall" Name="$(var.PuppetServiceName)" Wait="yes" />
+                            </Component>
+                            <!-- mcollective is only installed for Puppet Enterprise -->
+                            <?if $(var.PackageBrand) = enterprise ?>
+                            <Component Id="MCOService" Guid="7601FCEA-90B3-CC69-6A69-4087FBC7292D">
+                                <File Id="MCODaemonBat" KeyPath="yes" Source="stagedir\mcollective\ext\windows\daemon.bat" Name="mco_daemon.bat" />
+                                <!-- This service is installed with start set to demand because
                 it won't be correctly configured to start right away. The
                 puppet run that configures mcollective will allow it to start
                 and set it to automatic -->
-                <ServiceInstall Id="MCOServiceInstaller"
-                  Account="LocalSystem"
-                  Description="Puppet Labs server orchestration framework"
-                  DisplayName="Marionette Collective Server"
-                  Interactive="no"
-                  Name="pe-mcollective"
-                  Start="demand"
-                  Type="ownProcess"
-                  ErrorControl="normal"
-                  Vital="yes"
-                  />
-                <ServiceControl Id="MCOStartService" Stop="both" Remove="uninstall" Name="pe-mcollective" Wait="yes" />
-              </Component>
-              <?endif?>
+                                <ServiceInstall Id="MCOServiceInstaller" Account="LocalSystem" Description="Puppet Labs server orchestration framework" DisplayName="Marionette Collective Server" Interactive="no" Name="pe-mcollective" Start="demand" Type="ownProcess" ErrorControl="normal" Vital="yes" />
+                                <ServiceControl Id="MCOStartService" Stop="both" Remove="uninstall" Name="pe-mcollective" Wait="yes" />
+                            </Component>
+                            <?endif ?>
+                        </Directory>
+                    </Directory>
+                </Directory>
             </Directory>
-          </Directory>
-        </Directory>
-      </Directory>
-      <!-- The CommonAppDataFolder is automatically filled in for us. -->
-      <Directory Id="CommonAppDataFolder" Name="CommonAppData">
-        <Directory Id="PuppetLabsAppData" Name="PuppetLabs">
-          <Directory Id="FacterAppData" Name="facter">
-            <Directory Id="FactsDotD" Name="facts.d">
-              <Component Id="PuppetInstallerFacts" Permanent="yes" Guid="4E7C234B-2837-4459-A20E-9503A922FCB9">
-                <CreateFolder>
-                  <Permission GenericAll="yes" User="Administrators" />
-                  <Permission GenericRead="yes" GenericExecute="yes" User="Everyone" />
-                </CreateFolder>
-              </Component>
-            </Directory>
-          </Directory>
-          <!-- mcollective is only installed for Puppet Enterprise -->
-          <?if $(var.PackageBrand) = enterprise ?>
-          <Directory Id="MCOAppData" Name="mcollective">
-            <Directory Id="MCOConfDir" Name="etc">
-              <Component Id="MCOConfDir" Permanent="yes" Guid="3E904914-17C7-138C-F5DF-280F680E067C">
-                <CreateFolder />
-              </Component>
-            </Directory>
-            <Directory Id="MCOVarDir" Name="var">
-              <Directory Id="MCOLogDir" Name="log">
-                <Component Id="MCOLogDir" Permanent="yes" Guid="F9357673-2AF2-90FA-8707-14EE37FA0657">
-                  <CreateFolder />
-                </Component>
-              </Directory>
-            </Directory>
-          </Directory>
-          <?endif ?>
-          <Directory Id="PuppetAppData" Name="puppet">
-            <Directory Id="PuppetConfDir" Name="etc">
-              <!-- This is a permanent directory, do not remove on uninstall -->
-              <Component Id="PuppetConfUnconditionalSettings" Permanent="yes" Guid="B9179A60-483F-4F32-8E3F-AD632B0DEBB4">
-                <CreateFolder />
-                <IniFile Id="PuppetConfServer" Name="puppet.conf"
-                  Action="addLine"
-                  Section="main"
-                  Key="server" Value="[PUPPET_MASTER_SERVER]"
-                  Directory="PuppetConfDir" />
-                <IniFile Id="PuppetConfPluginSync" Name="puppet.conf"
-                  Action="createLine"
-                  Section="main"
-                  Key="pluginsync" Value="true"
-                  Directory="PuppetConfDir" />
-                <IniFile Id="PuppetConfAutoflush" Name="puppet.conf"
-                  Action="createLine"
-                  Section="main"
-                  Key="autoflush" Value="true"
-                  Directory="PuppetConfDir" />
-                <!-- Only set these puppet.conf entries for Puppet Enterprise.
+            <!-- The CommonAppDataFolder is automatically filled in for us. -->
+            <Directory Id="CommonAppDataFolder" Name="CommonAppData">
+                <Directory Id="PuppetLabsAppData" Name="PuppetLabs">
+                    <Directory Id="FacterAppData" Name="facter">
+                        <Directory Id="FactsDotD" Name="facts.d">
+                            <Component Id="PuppetInstallerFacts" Permanent="yes" Guid="4E7C234B-2837-4459-A20E-9503A922FCB9">
+                                <CreateFolder>
+                                    <Permission GenericAll="yes" User="Administrators" />
+                                    <Permission GenericRead="yes" GenericExecute="yes" User="Everyone" />
+                                </CreateFolder>
+                                <File Id="uuid.bat" KeyPath="yes" Source="uuid.bat" />
+                            </Component>
+                        </Directory>
+                    </Directory>
+                    <!-- mcollective is only installed for Puppet Enterprise -->
+                    <?if $(var.PackageBrand) = enterprise ?>
+                    <Directory Id="MCOAppData" Name="mcollective">
+                        <Directory Id="MCOConfDir" Name="etc">
+                            <Component Id="MCOConfDir" Permanent="yes" Guid="3E904914-17C7-138C-F5DF-280F680E067C">
+                                <CreateFolder />
+                            </Component>
+                        </Directory>
+                        <Directory Id="MCOVarDir" Name="var">
+                            <Directory Id="MCOLogDir" Name="log">
+                                <Component Id="MCOLogDir" Permanent="yes" Guid="F9357673-2AF2-90FA-8707-14EE37FA0657">
+                                    <CreateFolder />
+                                </Component>
+                            </Directory>
+                        </Directory>
+                    </Directory>
+                    <?endif ?>
+                    <Directory Id="PuppetAppData" Name="puppet">
+                        <Directory Id="PuppetConfDir" Name="etc">
+                            <!-- This is a permanent directory, do not remove on uninstall -->
+                            <Component Id="PuppetConfUnconditionalSettings" Permanent="yes" Guid="B9179A60-483F-4F32-8E3F-AD632B0DEBB4">
+                                <CreateFolder />
+                                <IniFile Id="PuppetConfServer" Name="puppet.conf" Action="addLine" Section="main" Key="server" Value="[PUPPET_MASTER_SERVER]" Directory="PuppetConfDir" />
+                                <IniFile Id="PuppetConfPluginSync" Name="puppet.conf" Action="createLine" Section="main" Key="pluginsync" Value="true" Directory="PuppetConfDir" />
+                                <IniFile Id="PuppetConfAutoflush" Name="puppet.conf" Action="createLine" Section="main" Key="autoflush" Value="true" Directory="PuppetConfDir" />
+                                <!-- Only set these puppet.conf entries for Puppet Enterprise.
                      This is to make Puppet FOSS consistent with Puppet FOSS on
                      other platforms and Puppet Enterprise consistent with PE
                      on other platforms. -->
-                <?if $(var.PackageBrand) = enterprise ?>
-                <IniFile Id="PuppetConfArchiveFiles" Name="puppet.conf"
-                  Action="createLine"
-                  Section="main"
-                  Key="archive_files" Value="true"
-                  Directory="PuppetConfDir" />
-                <IniFile Id="PuppetConfArchiveFileServer" Name="puppet.conf"
-                  Action="addLine"
-                  Section="main"
-                  Key="archive_file_server" Value="[PUPPET_MASTER_SERVER]"
-                  Directory="PuppetConfDir" />
-                <IniFile Id="PuppetConfGraph" Name="puppet.conf"
-                  Action="createLine"
-                  Section="main"
-                  Key="graph" Value="true"
-                  Directory="PuppetConfDir" />
-                <?endif ?>
-              </Component>
-              <Component Id="PuppetConfWithAgentEnvironment" Permanent="yes" Guid="EC56FB39-A176-42BA-BB1C-10C8DE76AE67">
-                <Condition>PUPPET_AGENT_ENVIRONMENT</Condition>
-                <CreateFolder />
-                <!-- The agent environment setting will only be managed if the
+                                <?if $(var.PackageBrand) = enterprise ?>
+                                <IniFile Id="PuppetConfArchiveFiles" Name="puppet.conf" Action="createLine" Section="main" Key="archive_files" Value="true" Directory="PuppetConfDir" />
+                                <IniFile Id="PuppetConfArchiveFileServer" Name="puppet.conf" Action="addLine" Section="main" Key="archive_file_server" Value="[PUPPET_MASTER_SERVER]" Directory="PuppetConfDir" />
+                                <IniFile Id="PuppetConfGraph" Name="puppet.conf" Action="createLine" Section="main" Key="graph" Value="true" Directory="PuppetConfDir" />
+                                <?endif ?>
+                            </Component>
+                            <Component Id="PuppetConfWithAgentEnvironment" Permanent="yes" Guid="EC56FB39-A176-42BA-BB1C-10C8DE76AE67">
+                                <Condition>PUPPET_AGENT_ENVIRONMENT</Condition>
+                                <CreateFolder />
+                                <!-- The agent environment setting will only be managed if the
                      PUPPET_AGENT_ENVIRONMENT is not an empty string -->
-                <!-- Manage the entry itself -->
-                <IniFile Id="PuppetConfAgentEnvironment" Name="puppet.conf"
-                  Action="addLine"
-                  Section="main"
-                  Key="environment" Value="[PUPPET_AGENT_ENVIRONMENT]"
-                  Directory="PuppetConfDir" />
-              </Component>
-              <Component Id="PuppetConfWithCertname" Permanent="yes" Guid="5D1813E1-0AEB-4965-B504-354D7F10DCEA">
-                <Condition>PUPPET_AGENT_CERTNAME</Condition>
-                <CreateFolder />
-                <!-- The certname setting will only be managed if the
+                                <!-- Manage the entry itself -->
+                                <IniFile Id="PuppetConfAgentEnvironment" Name="puppet.conf" Action="addLine" Section="main" Key="environment" Value="[PUPPET_AGENT_ENVIRONMENT]" Directory="PuppetConfDir" />
+                            </Component>
+                            <Component Id="PuppetConfWithCertname" Permanent="yes" Guid="5D1813E1-0AEB-4965-B504-354D7F10DCEA">
+                                <Condition>PUPPET_AGENT_CERTNAME</Condition>
+                                <CreateFolder />
+                                <!-- The certname setting will only be managed if the
                      PUPPET_AGENT_CERTNAME is not an empty string -->
-                <!-- Manage the entry itself -->
-                <IniFile Id="PuppetConfCertname" Name="puppet.conf"
-                  Action="addLine"
-                  Section="main"
-                  Key="certname" Value="[PUPPET_AGENT_CERTNAME]"
-                  Directory="PuppetConfDir" />
-              </Component>
-              <Component Id="PuppetConfWithCaServer" Permanent="yes" Guid="CE676CF1-2E12-4CDC-B87F-D4BC4E71FF85">
-                <Condition>PUPPET_CA_SERVER</Condition>
-                <CreateFolder />
-                <!-- The certname setting will only be managed if the
+                                <!-- Manage the entry itself -->
+                                <IniFile Id="PuppetConfCertname" Name="puppet.conf" Action="addLine" Section="main" Key="certname" Value="[PUPPET_AGENT_CERTNAME]" Directory="PuppetConfDir" />
+                            </Component>
+                            <Component Id="PuppetConfWithCaServer" Permanent="yes" Guid="CE676CF1-2E12-4CDC-B87F-D4BC4E71FF85">
+                                <Condition>PUPPET_CA_SERVER</Condition>
+                                <CreateFolder />
+                                <!-- The certname setting will only be managed if the
                      PUPPET_CA_SERVER is not an empty string -->
-                <IniFile Id="PuppetConfCaServer" Name="puppet.conf"
-                  Action="addLine"
-                  Section="main"
-                  Key="ca_server" Value="[PUPPET_CA_SERVER]"
-                  Directory="PuppetConfDir" />
-              </Component>
-            </Directory>
-            <!-- This PuppetVarDir directory is necessary to fix #12576 otherwise
+                                <IniFile Id="PuppetConfCaServer" Name="puppet.conf" Action="addLine" Section="main" Key="ca_server" Value="[PUPPET_CA_SERVER]" Directory="PuppetConfDir" />
+                            </Component>
+                        </Directory>
+                        <!-- This PuppetVarDir directory is necessary to fix #12576 otherwise
                  puppet cannot create the directories it needs since the parent
                  does not exist. -->
-            <Directory Id="PuppetVarDir" Name="var">
-              <Component Id="PuppetVarDir" Permanent="yes" Guid="B95A17F3-CF5E-4EC7-859E-F10C0965645F">
-                <CreateFolder />
-              </Component>
+                        <Directory Id="PuppetVarDir" Name="var">
+                            <Component Id="PuppetVarDir" Permanent="yes" Guid="B95A17F3-CF5E-4EC7-859E-F10C0965645F">
+                                <CreateFolder />
+                            </Component>
+                        </Directory>
+                        <Directory Id="PuppetRazorDir" Name="razor">
+                            <Component Id="PuppetRazorDir" Guid="58F400D9-75A0-41AB-A142-97CBA9BEE882" Permanent="yes">
+                                <Condition>WIM_NEEDED = "1"</Condition>
+                                <CreateFolder />
+                                <File Id="PuppetBootBat" Name="puppetboot.bat" Source="stagedir\puppet\ext\windows\razor\puppetboot.bat" />
+                                <File Id="Wget" Name="wget.exe" Source="stagedir\puppet\ext\windows\razor\wget.exe">
+                                    <CopyFile Id="Copy2SystemFolder" DestinationProperty="SystemFolder" />
+                                </File>
+                            </Component>
+                        </Directory>
+                    </Directory>
+                    <Directory Id="HieraAppData" Name="hiera">
+                        <Directory Id="HieraEtcDir" Name="etc">
+                            <Component Id="HieraEtcDir" Permanent="yes" Guid="88DE0215-554E-44CC-A8EB-CD8C030B1695">
+                                <CreateFolder />
+                                <File Id="HieraConf" KeyPath="yes" Source="stagedir\hiera\ext\hiera.yaml" />
+                            </Component>
+                        </Directory>
+                        <Directory Id="HieraVarDir" Name="var">
+                            <Component Id="HieraVarDir" Permanent="yes" Guid="01C15CC4-74D1-4E33-887B-E25CA4A8EFB6">
+                                <CreateFolder />
+                            </Component>
+                        </Directory>
+                    </Directory>
+                </Directory>
             </Directory>
-          </Directory>
-          <Directory Id="HieraAppData" Name="hiera">
-            <Directory Id="HieraEtcDir" Name="etc">
-              <Component Id="HieraEtcDir" Permanent="yes" Guid="88DE0215-554E-44CC-A8EB-CD8C030B1695">
-                <CreateFolder />
-                <File Id="HieraConf" KeyPath="yes" Source="stagedir\hiera\ext\hiera.yaml" />
-              </Component>
-            </Directory>
-            <Directory Id="HieraVarDir" Name="var">
-              <Component Id="HieraVarDir" Permanent="yes" Guid="01C15CC4-74D1-4E33-887B-E25CA4A8EFB6">
-                <CreateFolder />
-              </Component>
-            </Directory>
-          </Directory>
-        </Directory>
-      </Directory>
-
-      <!--
+            <!--
         If puppet is configured to run as someone other than LocalSystem
         and we are installing or upgrading, then allow the account to
         logon as a service and add the account to the local Administrators
         account. If the account doesn't exist, the install will fail.
       -->
-      <Component Id="PuppetServiceUser" Guid="0CCA1CDC-CD25-43A5-BE8A-0D455C63D1BE">
-        <Condition><![CDATA[NOT Installed AND PUPPET_AGENT_ACCOUNT_USER <> "LocalSystem"]]></Condition>
-        <util:User Id="puppetServiceUser"
-                   Domain="[PUPPET_AGENT_ACCOUNT_DOMAIN]"
-                   Name="[PUPPET_AGENT_ACCOUNT_USER]"
-                   Password="[PUPPET_AGENT_ACCOUNT_PASSWORD]"
-                   LogonAsService="yes"
-                   CreateUser="no"
-                   UpdateIfExists="yes"
-                   RemoveOnUninstall="no">
-          <util:GroupRef Id="AdminGroup"/>
-        </util:User>
-      </Component>
-
-      <!-- This section inspired by: http://wix.sourceforge.net/manual-wix3/write_a_registry_entry.htm -->
-      <!-- We write to $(var.OurCompanyName)\$(var.OurCommonProductNameWord)
+            <Component Id="PuppetServiceUser" Guid="0CCA1CDC-CD25-43A5-BE8A-0D455C63D1BE">
+                <Condition><![CDATA[NOT Installed AND PUPPET_AGENT_ACCOUNT_USER <> "LocalSystem"]]></Condition>
+                <util:User Id="puppetServiceUser" Domain="[PUPPET_AGENT_ACCOUNT_DOMAIN]" Name="[PUPPET_AGENT_ACCOUNT_USER]" Password="[PUPPET_AGENT_ACCOUNT_PASSWORD]" LogonAsService="yes" CreateUser="no" UpdateIfExists="yes" RemoveOnUninstall="no">
+                    <util:GroupRef Id="AdminGroup" />
+                </util:User>
+            </Component>
+            <!-- This section inspired by: http://wix.sourceforge.net/manual-wix3/write_a_registry_entry.htm -->
+            <!-- We write to $(var.OurCompanyName)\$(var.OurCommonProductNameWord)
            (Puppet Labs\CommonProduct)
            in order to restore the PUPPET_MASTER_SERVER property when replacing
            Puppet FOSS with Puppet Enterprise. -->
-      <Component Id="RegistryEntries" Guid="68F5D91C-49C8-43F7-940A-481007689E79">
-        <RegistryKey
-          Root="HKLM"
-          Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)"
-          Action="create" >
-          <!-- This is the default (aka 'unnamed') key value of this path -->
-          <RegistryValue Type="integer" Value="0"/>
-          <!-- This is the specified value of a key at this path -->
-          <RegistryValue Name="InstalledFlag" Value="1" Type="integer" KeyPath="yes"/>
-          <!-- Store properties for later recall during uninstall, upgrade, repair -->
-          <RegistryValue Name="RememberedPuppetMasterServer" Type="string" Value="[PUPPET_MASTER_SERVER]" />
-          <RegistryValue Name="RememberedPuppetAgentEnvironment" Type="string" Value="[PUPPET_AGENT_ENVIRONMENT]" />
-          <RegistryValue Name="RememberedPuppetCaServer" Type="string" Value="[PUPPET_CA_SERVER]" />
-          <RegistryValue Name="RememberedPuppetAgentCertname" Type="string" Value="[PUPPET_AGENT_CERTNAME]" />
-          <RegistryValue Name="RememberedPuppetAgentStartupMode" Type="string" Value="[PUPPET_AGENT_STARTUP_MODE]" />
-        </RegistryKey>
-        <!-- Product Specific Properties.  We keep INSTALLDIR here so as not to
+            <Component Id="RegistryEntries" Guid="68F5D91C-49C8-43F7-940A-481007689E79">
+                <RegistryKey Root="HKLM" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)" Action="create">
+                    <!-- This is the default (aka 'unnamed') key value of this path -->
+                    <RegistryValue Type="integer" Value="0" />
+                    <!-- This is the specified value of a key at this path -->
+                    <RegistryValue Name="InstalledFlag" Value="1" Type="integer" KeyPath="yes" />
+                    <!-- Store properties for later recall during uninstall, upgrade, repair -->
+                    <RegistryValue Name="RememberedPuppetMasterServer" Type="string" Value="[PUPPET_MASTER_SERVER]" />
+                    <RegistryValue Name="RememberedPuppetAgentEnvironment" Type="string" Value="[PUPPET_AGENT_ENVIRONMENT]" />
+                    <RegistryValue Name="RememberedPuppetCaServer" Type="string" Value="[PUPPET_CA_SERVER]" />
+                    <RegistryValue Name="RememberedPuppetAgentCertname" Type="string" Value="[PUPPET_AGENT_CERTNAME]" />
+                    <RegistryValue Name="RememberedPuppetAgentStartupMode" Type="string" Value="[PUPPET_AGENT_STARTUP_MODE]" />
+                </RegistryKey>
+                <!-- Product Specific Properties.  We keep INSTALLDIR here so as not to
              accidentally install Puppet Enterprise into Puppet's default
              install directory and vice-versa. -->
-        <RegistryKey
-          Root="HKLM"
-          Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurProductNameWord)"
-          Action="create" >
-          <!-- This is the default (aka 'unnamed') key value of this path -->
-          <RegistryValue Type="integer" Value="0"/>
-          <!-- RememberedInstallDir -->
-          <RegistryValue Name="RememberedInstallDir" Type="string" Value="[INSTALLDIR]" />
-        </RegistryKey>
-        <RegistryKey
-            Root="HKLM"
-            Key="SYSTEM\CurrentControlSet\services\eventlog\Application\Puppet"
-            Action="createAndRemoveOnUninstall">
-          <RegistryValue Type="string" Name="EventMessageFile" Value="[INSTALLDIR]puppet\ext\windows\eventlog\puppetres.dll"/>
-          <RegistryValue Type="integer" Name="TypesSupported" Value="7"/>
-        </RegistryKey>
-      </Component>
-    </Directory>
-
-    <!-- It is possible to override WixVariable's on the command line using the
+                <RegistryKey Root="HKLM" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurProductNameWord)" Action="create">
+                    <!-- This is the default (aka 'unnamed') key value of this path -->
+                    <RegistryValue Type="integer" Value="0" />
+                    <!-- RememberedInstallDir -->
+                    <RegistryValue Name="RememberedInstallDir" Type="string" Value="[INSTALLDIR]" />
+                </RegistryKey>
+                <RegistryKey Root="HKLM" Key="SYSTEM\CurrentControlSet\services\eventlog\Application\Puppet" Action="createAndRemoveOnUninstall">
+                    <RegistryValue Type="string" Name="EventMessageFile" Value="[INSTALLDIR]puppet\ext\windows\eventlog\puppetres.dll" />
+                    <RegistryValue Type="integer" Name="TypesSupported" Value="7" />
+                </RegistryKey>
+            </Component>
+        </Directory>
+        <!-- It is possible to override WixVariable's on the command line using the
          -d flag to light when Overridable="yes". -->
-    <!-- #12475 - Specify the license. -->
-    <WixVariable Id="WixUILicenseRtf" Value="conf\windows\stage\misc\LICENSE.rtf" Overridable="yes" />
-    <!-- (#12521) Use local Bitmaps -->
-    <WixVariable Id="WixUIBannerBmp" Value="$(var.BitmapFolder)\bannrbmp.bmp" />
-    <WixVariable Id="WixUIDialogBmp" Value="$(var.BitmapFolder)\$(var.DialogBitmap)" />
-    <WixVariable Id="WixUIExclamationIco" Value="$(var.BitmapFolder)\exclamic.ico" />
-    <WixVariable Id="WixUIInfoIco" Value="$(var.BitmapFolder)\info.ico" />
-    <WixVariable Id="WixUINewIco" Value="$(var.BitmapFolder)\new.ico" />
-    <WixVariable Id="WixUIUpIco" Value="$(var.BitmapFolder)\up.ico" />
-
-    <!-- Add/Remove Programs icon and help link -->
-    <Icon Id="$(var.OurCompanyNameWord).ico" SourceFile="conf\windows\stage\misc\puppetlabs.ico"/>
-    <Property Id="ARPPRODUCTICON" Value="$(var.OurCompanyNameWord).ico" />
-    <Property Id="ARPHELPLINK" Value="$(var.HelpLink)" />
-
-    <!-- This property is used in the localization strings for the GUI -->
-    <Property Id="VersionUIString" Value="$(var.VersionUIString)" />
-
-    <!--
+        <!-- #12475 - Specify the license. -->
+        <WixVariable Id="WixUILicenseRtf" Value="conf\windows\stage\misc\LICENSE.rtf" Overridable="yes" />
+        <!-- (#12521) Use local Bitmaps -->
+        <WixVariable Id="WixUIBannerBmp" Value="$(var.BitmapFolder)\bannrbmp.bmp" />
+        <WixVariable Id="WixUIDialogBmp" Value="$(var.BitmapFolder)\$(var.DialogBitmap)" />
+        <WixVariable Id="WixUIExclamationIco" Value="$(var.BitmapFolder)\exclamic.ico" />
+        <WixVariable Id="WixUIInfoIco" Value="$(var.BitmapFolder)\info.ico" />
+        <WixVariable Id="WixUINewIco" Value="$(var.BitmapFolder)\new.ico" />
+        <WixVariable Id="WixUIUpIco" Value="$(var.BitmapFolder)\up.ico" />
+        <!-- Add/Remove Programs icon and help link -->
+        <Icon Id="$(var.OurCompanyNameWord).ico" SourceFile="conf\windows\stage\misc\puppetlabs.ico" />
+        <Property Id="ARPPRODUCTICON" Value="$(var.OurCompanyNameWord).ico" />
+        <Property Id="ARPHELPLINK" Value="$(var.HelpLink)" />
+        <!-- This property is used in the localization strings for the GUI -->
+        <Property Id="VersionUIString" Value="$(var.VersionUIString)" />
+        <!--
       By default, install puppet agent to run as LocalSystem. Password
       is hidden to prevent it from appearing in msiexec log files
     -->
-    <Property Id="PUPPET_AGENT_ACCOUNT_DOMAIN" Value="."/>
-    <Property Id="PUPPET_AGENT_ACCOUNT_USER" Value="LocalSystem"/>
-    <Property Id="PUPPET_AGENT_ACCOUNT_PASSWORD" Hidden="yes"/>
-
-    <!--
+        <Property Id="PUPPET_AGENT_ACCOUNT_DOMAIN" Value="." />
+        <Property Id="PUPPET_AGENT_ACCOUNT_USER" Value="LocalSystem" />
+        <Property Id="PUPPET_AGENT_ACCOUNT_PASSWORD" Hidden="yes" />
+        <!--
       Remembered Property Pattern
       http://robmensching.com/blog/posts/2010/5/2/The-WiX-toolsets-Remember-Property-pattern
       -->
-    <Property Id="INSTALLDIR">
-      <!-- Recall the property in repair, upgrade, and uninstall scenarios -->
-      <RegistrySearch Id="RecallInstallDir" Root="HKLM"
-        Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurProductNameWord)"
-        Name="RememberedInstallDir" Type="raw" />
-    </Property>
-    <!-- Note the static default value of "puppet".  This will be overriden by
+        <Property Id="INSTALLDIR">
+            <!-- Recall the property in repair, upgrade, and uninstall scenarios -->
+            <RegistrySearch Id="RecallInstallDir" Root="HKLM" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurProductNameWord)" Name="RememberedInstallDir" Type="raw" />
+        </Property>
+        <!-- Note the static default value of "puppet".  This will be overriden by
          the command line. -->
-    <Property Id="PUPPET_MASTER_SERVER">
-      <!-- Recall the property in repair, upgrade, and uninstall scenarios -->
-      <RegistrySearch Id="RecallPuppetMasterServer" Root="HKLM"
-        Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)"
-        Name="RememberedPuppetMasterServer" Type="raw" />
-    </Property>
-    <Property Id="PUPPET_AGENT_ENVIRONMENT">
-      <!-- Recall the property in repair, upgrade, and uninstall scenarios -->
-      <RegistrySearch Id="RecallPuppetAgentEnvironment" Root="HKLM"
-        Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)"
-        Name="RememberedPuppetAgentEnvironment" Type="raw" />
-    </Property>
-    <Property Id="PUPPET_AGENT_CERTNAME">
-      <!-- Recall the property in repair, upgrade, and uninstall scenarios -->
-      <RegistrySearch Id="RecallPuppetAgentCertname" Root="HKLM"
-        Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)"
-        Name="RememberedPuppetAgentCertname" Type="raw" />
-    </Property>
-    <Property Id="PUPPET_CA_SERVER">
-      <RegistrySearch Id="RecallPuppetCAServer" Root="HKLM"
-        Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)"
-        Name="RememberedPuppetCaServer" Type="raw" />
-    </Property>
-    <Property Id="PUPPET_AGENT_STARTUP_MODE">
-      <RegistrySearch Id="RecallPuppetAgentStartupMode" Root="HKLM"
-        Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)"
-        Name="RememberedPuppetAgentStartupMode" Type="raw" />
-    </Property>
-
-    <!-- Custom Actions to handle command line property values that override
+        <Property Id="WIM_NEEDED">
+            <!-- Recall the property in repair, upgrade, and uninstall scenarios -->
+            <RegistrySearch Id="RecallWimNeeded" Root="HKLM" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)" Name="RememberedWimNeeded" Type="raw" />
+        </Property>
+        <Property Id="PUPPET_MASTER_SERVER">
+            <!-- Recall the property in repair, upgrade, and uninstall scenarios -->
+            <RegistrySearch Id="RecallPuppetMasterServer" Root="HKLM" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)" Name="RememberedPuppetMasterServer" Type="raw" />
+        </Property>
+        <Property Id="PUPPET_AGENT_ENVIRONMENT">
+            <!-- Recall the property in repair, upgrade, and uninstall scenarios -->
+            <RegistrySearch Id="RecallPuppetAgentEnvironment" Root="HKLM" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)" Name="RememberedPuppetAgentEnvironment" Type="raw" />
+        </Property>
+        <Property Id="PUPPET_AGENT_CERTNAME">
+            <!-- Recall the property in repair, upgrade, and uninstall scenarios -->
+            <RegistrySearch Id="RecallPuppetAgentCertname" Root="HKLM" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)" Name="RememberedPuppetAgentCertname" Type="raw" />
+        </Property>
+        <Property Id="PUPPET_CA_SERVER">
+            <RegistrySearch Id="RecallPuppetCAServer" Root="HKLM" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)" Name="RememberedPuppetCaServer" Type="raw" />
+        </Property>
+        <Property Id="PUPPET_AGENT_STARTUP_MODE">
+            <RegistrySearch Id="RecallPuppetAgentStartupMode" Root="HKLM" Key="SOFTWARE\$(var.OurCompanyName)\$(var.OurCommonProductNameWord)" Name="RememberedPuppetAgentStartupMode" Type="raw" />
+        </Property>
+        <!-- Custom Actions to handle command line property values that override
          remembered property values -->
-    <!-- INSTALLDIR -->
-    <CustomAction Id="SaveCmdLineInstallDir"
-      Property="CMDLINE_INSTALLDIR"
-      Value="[INSTALLDIR]"
-      Execute="firstSequence" />
-    <CustomAction Id="SetFromCmdLineInstallDir"
-      Property="INSTALLDIR"
-      Value="[CMDLINE_INSTALLDIR]"
-      Execute="firstSequence" />
-    <!-- PUPPET_MASTER_SERVER -->
-    <CustomAction Id="SaveCmdLinePuppetMasterServer"
-      Property="CMDLINE_PUPPET_MASTER_SERVER"
-      Value="[PUPPET_MASTER_SERVER]"
-      Execute="firstSequence" />
-    <CustomAction Id="SetFromCmdLinePuppetMasterServer"
-      Property="PUPPET_MASTER_SERVER"
-      Value="[CMDLINE_PUPPET_MASTER_SERVER]"
-      Execute="firstSequence" />
-    <CustomAction Id="SetDefaultPuppetMasterServer"
-      Property="PUPPET_MASTER_SERVER"
-      Value="puppet"
-      Execute="firstSequence" />
-    <!-- PUPPET_AGENT_ENVIRONMENT -->
-    <CustomAction Id="SaveCmdLinePuppetAgentEnvironment"
-      Property="CMDLINE_PUPPET_AGENT_ENVIRONMENT"
-      Value="[PUPPET_AGENT_ENVIRONMENT]"
-      Execute="firstSequence" />
-    <CustomAction Id="SetFromCmdLinePuppetAgentEnvironment"
-      Property="PUPPET_AGENT_ENVIRONMENT"
-      Value="[CMDLINE_PUPPET_AGENT_ENVIRONMENT]"
-      Execute="firstSequence" />
-    <CustomAction Id="SetDefaultPuppetAgentEnvironment"
-      Property="PUPPET_AGENT_ENVIRONMENT"
-      Value="production"
-      Execute="firstSequence" />
-    <!-- PUPPET_AGENT_CERTNAME -->
-    <CustomAction Id="SaveCmdLinePuppetAgentCertname"
-      Property="CMDLINE_PUPPET_AGENT_CERTNAME"
-      Value="[PUPPET_AGENT_CERTNAME]"
-      Execute="firstSequence" />
-    <CustomAction Id="SetFromCmdLinePuppetAgentCertname"
-      Property="PUPPET_AGENT_CERTNAME"
-      Value="[CMDLINE_PUPPET_AGENT_CERTNAME]"
-      Execute="firstSequence" />
-    <!-- PUPPET_CA_SERVER -->
-    <CustomAction Id="SaveCmdLinePuppetCaServer"
-      Property="CMDLINE_PUPPET_CA_SERVER"
-      Value="[PUPPET_CA_SERVER]"
-      Execute="firstSequence" />
-    <CustomAction Id="SetFromCmdLinePuppetCaServer"
-      Property="PUPPET_CA_SERVER"
-      Value="[CMDLINE_PUPPET_CA_SERVER]"
-      Execute="firstSequence" />
-    <!-- PUPPET_AGENT_STARTUP_MODE -->
-    <CustomAction Id="SaveCmdLinePuppetAgentStartupMode"
-      Property="CMDLINE_PUPPET_AGENT_STARTUP_MODE"
-      Value="[PUPPET_AGENT_STARTUP_MODE]"
-      Execute="firstSequence" />
-    <CustomAction Id="SetFromCmdLinePuppetAgentStartupMode"
-      Property="PUPPET_AGENT_STARTUP_MODE"
-      Value="[CMDLINE_PUPPET_AGENT_STARTUP_MODE]"
-      Execute="firstSequence" />
-    <CustomAction Id="SetDomainToLocalComputer"
-       Property="PUPPET_AGENT_ACCOUNT_DOMAIN"
-       Value="[ComputerName]"
-       Execute="firstSequence"/>
-    <CustomAction Id="SetDomainToNtAuthority"
-       Property="PUPPET_AGENT_ACCOUNT_DOMAIN"
-       Value="NT AUTHORITY"
-       Execute="firstSequence"/>
-
-    <!-- First, save off properties specified on the command line Second,
+        <!-- INSTALLDIR -->
+        <CustomAction Id="SaveCmdLineInstallDir" Property="CMDLINE_INSTALLDIR" Value="[INSTALLDIR]" Execute="firstSequence" />
+        <CustomAction Id="SetFromCmdLineInstallDir" Property="INSTALLDIR" Value="[CMDLINE_INSTALLDIR]" Execute="firstSequence" />
+        <!-- PUPPET_MASTER_SERVER -->
+        <CustomAction Id="SaveCmdLinePuppetMasterServer" Property="CMDLINE_PUPPET_MASTER_SERVER" Value="[PUPPET_MASTER_SERVER]" Execute="firstSequence" />
+        <CustomAction Id="SetFromCmdLinePuppetMasterServer" Property="PUPPET_MASTER_SERVER" Value="[CMDLINE_PUPPET_MASTER_SERVER]" Execute="firstSequence" />
+        <CustomAction Id="SetDefaultPuppetMasterServer" Property="PUPPET_MASTER_SERVER" Value="puppet" Execute="firstSequence" />
+        <!-- PUPPET_AGENT_ENVIRONMENT -->
+        <CustomAction Id="SaveCmdLinePuppetAgentEnvironment" Property="CMDLINE_PUPPET_AGENT_ENVIRONMENT" Value="[PUPPET_AGENT_ENVIRONMENT]" Execute="firstSequence" />
+        <CustomAction Id="SetFromCmdLinePuppetAgentEnvironment" Property="PUPPET_AGENT_ENVIRONMENT" Value="[CMDLINE_PUPPET_AGENT_ENVIRONMENT]" Execute="firstSequence" />
+        <CustomAction Id="SetDefaultPuppetAgentEnvironment" Property="PUPPET_AGENT_ENVIRONMENT" Value="production" Execute="firstSequence" />
+        <!-- PUPPET_AGENT_CERTNAME -->
+        <CustomAction Id="SaveCmdLinePuppetAgentCertname" Property="CMDLINE_PUPPET_AGENT_CERTNAME" Value="[PUPPET_AGENT_CERTNAME]" Execute="firstSequence" />
+        <CustomAction Id="SetFromCmdLinePuppetAgentCertname" Property="PUPPET_AGENT_CERTNAME" Value="[CMDLINE_PUPPET_AGENT_CERTNAME]" Execute="firstSequence" />
+        <!-- PUPPET_CA_SERVER -->
+        <CustomAction Id="SaveCmdLinePuppetCaServer" Property="CMDLINE_PUPPET_CA_SERVER" Value="[PUPPET_CA_SERVER]" Execute="firstSequence" />
+        <CustomAction Id="SetFromCmdLinePuppetCaServer" Property="PUPPET_CA_SERVER" Value="[CMDLINE_PUPPET_CA_SERVER]" Execute="firstSequence" />
+        <!-- PUPPET_AGENT_STARTUP_MODE -->
+        <CustomAction Id="SaveCmdLinePuppetAgentStartupMode" Property="CMDLINE_PUPPET_AGENT_STARTUP_MODE" Value="[PUPPET_AGENT_STARTUP_MODE]" Execute="firstSequence" />
+        <CustomAction Id="SetFromCmdLinePuppetAgentStartupMode" Property="PUPPET_AGENT_STARTUP_MODE" Value="[CMDLINE_PUPPET_AGENT_STARTUP_MODE]" Execute="firstSequence" />
+        <CustomAction Id="SetDomainToLocalComputer" Property="PUPPET_AGENT_ACCOUNT_DOMAIN" Value="[ComputerName]" Execute="firstSequence" />
+        <CustomAction Id="SetDomainToNtAuthority" Property="PUPPET_AGENT_ACCOUNT_DOMAIN" Value="NT AUTHORITY" Execute="firstSequence" />
+        <!-- First, save off properties specified on the command line Second,
          restore the properties set by the command line overriding the recalled
          value from the registry -->
-    <InstallUISequence>
-      <!-- INSTALLDIR -->
-      <Custom Action='SaveCmdLineInstallDir' Before='AppSearch' />
-      <Custom Action='SetFromCmdLineInstallDir' After='AppSearch'>
+        <InstallUISequence>
+            <!-- INSTALLDIR -->
+            <Custom Action="SaveCmdLineInstallDir" Before="AppSearch" />
+            <Custom Action="SetFromCmdLineInstallDir" After="AppSearch">
         CMDLINE_INSTALLDIR
       </Custom>
-      <!-- PUPPET_MASTER_SERVER -->
-      <Custom Action='SaveCmdLinePuppetMasterServer' Before='AppSearch' />
-      <Custom Action='SetFromCmdLinePuppetMasterServer' After='AppSearch'>
+            <!-- PUPPET_MASTER_SERVER -->
+            <Custom Action="SaveCmdLinePuppetMasterServer" Before="AppSearch" />
+            <Custom Action="SetFromCmdLinePuppetMasterServer" After="AppSearch">
         CMDLINE_PUPPET_MASTER_SERVER
       </Custom>
-      <Custom Action='SetDefaultPuppetMasterServer' After='AppSearch'>
+            <Custom Action="SetDefaultPuppetMasterServer" After="AppSearch">
         PUPPET_MASTER_SERVER=""
       </Custom>
-      <!-- PUPPET_AGENT_ENVIRONMENT -->
-      <Custom Action='SaveCmdLinePuppetAgentEnvironment' Before='AppSearch' />
-      <Custom Action='SetFromCmdLinePuppetAgentEnvironment' After='AppSearch'>
+            <!-- PUPPET_AGENT_ENVIRONMENT -->
+            <Custom Action="SaveCmdLinePuppetAgentEnvironment" Before="AppSearch" />
+            <Custom Action="SetFromCmdLinePuppetAgentEnvironment" After="AppSearch">
         CMDLINE_PUPPET_AGENT_ENVIRONMENT
       </Custom>
-      <Custom Action='SetDefaultPuppetAgentEnvironment' After='AppSearch'>
+            <Custom Action="SetDefaultPuppetAgentEnvironment" After="AppSearch">
         PUPPET_AGENT_ENVIRONMENT=""
       </Custom>
-      <!-- PUPPET_AGENT_CERTNAME -->
-      <Custom Action='SaveCmdLinePuppetAgentCertname' Before='AppSearch' />
-      <Custom Action='SetFromCmdLinePuppetAgentCertname' After='AppSearch'>
+            <!-- PUPPET_AGENT_CERTNAME -->
+            <Custom Action="SaveCmdLinePuppetAgentCertname" Before="AppSearch" />
+            <Custom Action="SetFromCmdLinePuppetAgentCertname" After="AppSearch">
         CMDLINE_PUPPET_AGENT_CERTNAME
       </Custom>
-      <!-- PUPPET_CA_SERVER -->
-      <Custom Action='SaveCmdLinePuppetCaServer' Before='AppSearch' />
-      <Custom Action='SetFromCmdLinePuppetCaServer' After='AppSearch'>
+            <!-- PUPPET_CA_SERVER -->
+            <Custom Action="SaveCmdLinePuppetCaServer" Before="AppSearch" />
+            <Custom Action="SetFromCmdLinePuppetCaServer" After="AppSearch">
         CMDLINE_PUPPET_CA_SERVER
       </Custom>
-      <!-- PUPPET_AGENT_STARTUP_MODE -->
-      <Custom Action='SaveCmdLinePuppetAgentStartupMode' Before='AppSearch' />
-      <Custom Action='SetFromCmdLinePuppetAgentStartupMode' After='AppSearch'>
+            <!-- PUPPET_AGENT_STARTUP_MODE -->
+            <Custom Action="SaveCmdLinePuppetAgentStartupMode" Before="AppSearch" />
+            <Custom Action="SetFromCmdLinePuppetAgentStartupMode" After="AppSearch">
         CMDLINE_PUPPET_AGENT_STARTUP_MODE
       </Custom>
-      <!-- PUPPET_AGENT_ACCOUNT_DOMAIN -->
-      <Custom Action='SetDomainToLocalComputer' After='AppSearch'>
+            <!-- PUPPET_AGENT_ACCOUNT_DOMAIN -->
+            <Custom Action="SetDomainToLocalComputer" After="AppSearch">
         PUPPET_AGENT_ACCOUNT_DOMAIN = "."
       </Custom>
-      <Custom Action='SetDomainToNtAuthority' After='SetDomainToLocalComputer'>
+            <Custom Action="SetDomainToNtAuthority" After="SetDomainToLocalComputer">
         (PUPPET_AGENT_ACCOUNT_USER ~= "LocalService") OR (PUPPET_AGENT_ACCOUNT_USER ~= "NetworkService")
       </Custom>
-    </InstallUISequence>
-    <InstallExecuteSequence>
-      <!-- INSTALLDIR -->
-      <Custom Action='SaveCmdLineInstallDir' Before='AppSearch' />
-      <Custom Action='SetFromCmdLineInstallDir' After='AppSearch'>
+        </InstallUISequence>
+        <InstallExecuteSequence>
+            <!-- INSTALLDIR -->
+            <Custom Action="SaveCmdLineInstallDir" Before="AppSearch" />
+            <Custom Action="SetFromCmdLineInstallDir" After="AppSearch">
         CMDLINE_INSTALLDIR
       </Custom>
-      <!-- PUPPET_MASTER_SERVER -->
-      <Custom Action='SaveCmdLinePuppetMasterServer' Before='AppSearch' />
-      <Custom Action='SetFromCmdLinePuppetMasterServer' After='AppSearch'>
+            <!-- PUPPET_MASTER_SERVER -->
+            <Custom Action="SaveCmdLinePuppetMasterServer" Before="AppSearch" />
+            <Custom Action="SetFromCmdLinePuppetMasterServer" After="AppSearch">
         CMDLINE_PUPPET_MASTER_SERVER
       </Custom>
-      <Custom Action='SetDefaultPuppetMasterServer' After='AppSearch'>
+            <Custom Action="SetDefaultPuppetMasterServer" After="AppSearch">
         PUPPET_MASTER_SERVER=""
       </Custom>
-      <!-- PUPPET_AGENT_ENVIRONMENT -->
-      <Custom Action='SaveCmdLinePuppetAgentEnvironment' Before='AppSearch' />
-      <Custom Action='SetFromCmdLinePuppetAgentEnvironment' After='AppSearch'>
+            <!-- PUPPET_AGENT_ENVIRONMENT -->
+            <Custom Action="SaveCmdLinePuppetAgentEnvironment" Before="AppSearch" />
+            <Custom Action="SetFromCmdLinePuppetAgentEnvironment" After="AppSearch">
         CMDLINE_PUPPET_AGENT_ENVIRONMENT
       </Custom>
-      <Custom Action='SetDefaultPuppetAgentEnvironment' After='AppSearch'>
+            <Custom Action="SetDefaultPuppetAgentEnvironment" After="AppSearch">
         PUPPET_AGENT_ENVIRONMENT=""
       </Custom>
-       <!-- PUPPET_AGENT_CERTNAME -->
-      <Custom Action='SaveCmdLinePuppetAgentCertname' Before='AppSearch' />
-      <Custom Action='SetFromCmdLinePuppetAgentCertname' After='AppSearch'>
+            <!-- PUPPET_AGENT_CERTNAME -->
+            <Custom Action="SaveCmdLinePuppetAgentCertname" Before="AppSearch" />
+            <Custom Action="SetFromCmdLinePuppetAgentCertname" After="AppSearch">
         CMDLINE_PUPPET_AGENT_CERTNAME
       </Custom>
-      <!-- PUPPET_CA_SERVER -->
-      <Custom Action='SaveCmdLinePuppetCaServer' Before='AppSearch' />
-      <Custom Action='SetFromCmdLinePuppetCaServer' After='AppSearch'>
+            <!-- PUPPET_CA_SERVER -->
+            <Custom Action="SaveCmdLinePuppetCaServer" Before="AppSearch" />
+            <Custom Action="SetFromCmdLinePuppetCaServer" After="AppSearch">
         CMDLINE_PUPPET_CA_SERVER
       </Custom>
-      <!-- PUPPET_AGENT_START_MODE -->
-      <Custom Action='SaveCmdLinePuppetAgentStartupMode' Before='AppSearch' />
-      <Custom Action='SetFromCmdLinePuppetAgentStartupMode' After='AppSearch'>
+            <!-- PUPPET_AGENT_START_MODE -->
+            <Custom Action="SaveCmdLinePuppetAgentStartupMode" Before="AppSearch" />
+            <Custom Action="SetFromCmdLinePuppetAgentStartupMode" After="AppSearch">
         CMDLINE_PUPPET_AGENT_STARTUP_MODE
       </Custom>
-      <!-- PUPPET_AGENT_ACCOUNT_DOMAIN -->
-      <Custom Action='SetDomainToLocalComputer' After='AppSearch'>
+            <!-- PUPPET_AGENT_ACCOUNT_DOMAIN -->
+            <Custom Action="SetDomainToLocalComputer" After="AppSearch">
         PUPPET_AGENT_ACCOUNT_DOMAIN = "."
       </Custom>
-      <Custom Action='SetDomainToNtAuthority' After='SetDomainToLocalComputer'>
+            <Custom Action="SetDomainToNtAuthority" After="SetDomainToLocalComputer">
         (PUPPET_AGENT_ACCOUNT_USER ~= "LocalService") OR (PUPPET_AGENT_ACCOUNT_USER ~= "NetworkService")
       </Custom>
-    </InstallExecuteSequence>
-
-    <!--
+        </InstallExecuteSequence>
+        <!--
       The Features to install.  We're using ComponentGroupRef instead of ComponentRef since we're
       generating the ruby wxs file using heat
     -->
-    <Feature Id="$(var.OurProductNameWord)Runtime" Title="$(var.OurProductName) Runtime" Level="1">
-      <ComponentRef Id="RegistryEntries" />
-      <ComponentRef Id="PuppetVarDir" />
-      <ComponentRef Id="HieraVarDir" />
-      <ComponentRef Id="HieraEtcDir" />
-      <ComponentRef Id="PuppetShortcuts" />
-      <ComponentRef Id="PuppetDocumentationShortcuts" />
-
-      <ComponentRef Id="PuppetInstallDirBinToPath" />
-
-      <ComponentGroupRef Id="sys" />
-      <ComponentGroupRef Id="puppet" />
-      <ComponentGroupRef Id="facter" />
-      <ComponentGroupRef Id="hiera" />
-      <ComponentGroupRef Id="bin" />
-      <ComponentGroupRef Id="misc" />
-
-      <!-- The PuppetConf components are conditional on PUPPET_AGENT_CERTNAME -->
-      <ComponentRef Id="PuppetConfWithCertname" />
-      <!-- The PuppetConf components are conditional on PUPPET_CA_SERVER -->
-      <ComponentRef Id="PuppetConfWithCaServer" />
-      <!-- The PuppetConf components are conditional on PUPPET_AGENT_ENVIRONMENT -->
-      <ComponentRef Id="PuppetConfWithAgentEnvironment" />
-      <ComponentRef Id="PuppetConfUnconditionalSettings" />
-      <ComponentRef Id="PuppetInstallerFacts" />
-      <ComponentRef Id="PuppetServiceUser" />
-      <ComponentRef Id="PuppetServiceAutomatic" />
-      <ComponentRef Id="PuppetServiceManual" />
-      <ComponentRef Id="PuppetServiceDisabled" />
-
-      <!-- The MCO Parts are for Puppet Enterprise -->
-      <?if $(var.PackageBrand) = enterprise ?>
-      <ComponentGroupRef Id="mcollective" />
-      <ComponentGroupRef Id="mcollective_plugins" />
-      <ComponentRef Id="MCOConfDir" />
-      <ComponentRef Id="MCOLogDir" />
-      <ComponentRef Id="MCOService" />
-      <?endif ?>
-    </Feature>
-  </Product>
+        <Feature Id="$(var.OurProductNameWord)Runtime" Title="$(var.OurProductName) Runtime" Level="1">
+            <ComponentRef Id="RegistryEntries" />
+            <ComponentRef Id="PuppetVarDir" />
+            <ComponentRef Id="PuppetRazorDir" />
+            <ComponentRef Id="HieraVarDir" />
+            <ComponentRef Id="HieraEtcDir" />
+            <ComponentRef Id="PuppetShortcuts" />
+            <ComponentRef Id="PuppetDocumentationShortcuts" />
+            <ComponentRef Id="PuppetInstallDirBinToPath" />
+            <ComponentGroupRef Id="sys" />
+            <ComponentGroupRef Id="puppet" />
+            <ComponentGroupRef Id="facter" />
+            <ComponentGroupRef Id="hiera" />
+            <ComponentGroupRef Id="bin" />
+            <ComponentGroupRef Id="misc" />
+            <!-- The PuppetConf components are conditional on PUPPET_AGENT_CERTNAME -->
+            <ComponentRef Id="PuppetConfWithCertname" />
+            <!-- The PuppetConf components are conditional on PUPPET_CA_SERVER -->
+            <ComponentRef Id="PuppetConfWithCaServer" />
+            <!-- The PuppetConf components are conditional on PUPPET_AGENT_ENVIRONMENT -->
+            <ComponentRef Id="PuppetConfWithAgentEnvironment" />
+            <ComponentRef Id="PuppetConfUnconditionalSettings" />
+            <ComponentRef Id="PuppetInstallerFacts" />
+            <ComponentRef Id="PuppetServiceUser" />
+            <ComponentRef Id="PuppetServiceAutomatic" />
+            <ComponentRef Id="PuppetServiceManual" />
+            <ComponentRef Id="PuppetServiceDisabled" />
+            <!-- The MCO Parts are for Puppet Enterprise -->
+            <?if $(var.PackageBrand) = enterprise ?>
+            <ComponentGroupRef Id="mcollective" />
+            <ComponentGroupRef Id="mcollective_plugins" />
+            <ComponentRef Id="MCOConfDir" />
+            <ComponentRef Id="MCOLogDir" />
+            <ComponentRef Id="MCOService" />
+            <?endif ?>
+        </Feature>
+    </Product>
 </Wix>
