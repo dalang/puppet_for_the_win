@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <WixLocalization Culture="en-US" Codepage="1252" xmlns="http://schemas.microsoft.com/wix/2006/localization">
     <!-- _locID@Culture="en-US" _locComment="American English" -->
     <!-- _locID@Codepage="1252" _locComment="Windows-1252" -->
@@ -10,7 +10,7 @@
         which can be found in the file CPL.TXT at the root of this distribution.
         By using this software in any fashion, you are agreeing to be bound by
         the terms of this license.
-    
+
         You must not remove this notice, or any other, from this software.
     -->
 
